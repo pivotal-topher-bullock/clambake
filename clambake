@@ -1,0 +1,34 @@
+#!/bin/bash
+set -e
+
+function usage() {
+  echo "usage: $0 destination [apt-get-options]"
+  exit 1
+}
+
+if [ $# -lt 2 ]; then
+  usage
+fi
+
+destination=$1
+
+if [ ! -d "$destination" ]; then
+  echo "error: $destination is not a directory"
+  usage
+fi
+
+echo "🐚  Downloading .debs to $destination"
+
+shift
+
+docker run -it \
+  -v $destination:/tmp/cache \
+  ubuntu:trusty \
+  /bin/bash -c \
+  "
+set -e
+mkdir -p /tmp/clamcache
+apt-get update
+apt-get install -d -o=dir::cache=/tmp/clamcache $@
+cp /tmp/clamcache/archives/*.deb /tmp/cache
+  "
